@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>D3Recovery · Inter-crystal scatter recovery for Prism-PET with a diffusion model</title>
+  <meta name="description" content="D3Recovery is a diffusion-driven, physics-informed framework that recovers the crystal, depth of interaction and energy of the first interaction for inter-crystal scatter events in a light-sharing Prism-PET prototype scanner. Medical Physics 2026, SNMMI 2026 oral presentation.">
+  <meta name="keywords" content="D3Recovery, inter-crystal scatter, ICS recovery, Prism-PET, PET, diffusion model, DDPM, depth of interaction, SiPM, Medical Physics">
+  <meta name="theme-color" content="#b31b1b">
+
+  <!-- Social previews. If your GitHub username or repo name differ, update the two URLs below. -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="D3Recovery">
+  <meta property="og:title" content="D3Recovery · Inter-crystal scatter recovery for Prism-PET using a diffusion model">
+  <meta property="og:description" content="Medical Physics 2026 · SNMMI 2026 oral. Diffusion-driven recovery of the first interaction for inter-crystal scatter events, validated on a Prism-PET prototype scanner.">
+  <meta property="og:url" content="https://xeilwcm.github.io/D3Recovery/">
+  <meta property="og:image" content="https://xeilwcm.github.io/D3Recovery/static/images/social_preview.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="icon" href="static/images/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="static/images/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="static/images/apple-touch-icon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Google+Sans:400,500,700&amp;display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+  <link rel="stylesheet" href="static/css/style.css">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ScholarlyArticle",
+    "headline": "Inter-crystal scatter recovery of a light-sharing depth-encoding Prism-PET prototype scanner using a diffusion model",
+    "alternativeHeadline": "D3Recovery",
+    "datePublished": "2026",
+    "isPartOf": {"@type": "Periodical", "name": "Medical Physics"},
+    "sameAs": "https://doi.org/10.1002/mp.70661",
+    "author": [
+      {"@type": "Person", "name": "Wanbin Tan"},
+      {"@type": "Person", "name": "Saurav Dosi"},
+      {"@type": "Person", "name": "Soroush Shabani Sichani"},
+      {"@type": "Person", "name": "Yixin Li"},
+      {"@type": "Person", "name": "Zipai Wang"},
+      {"@type": "Person", "name": "Eric Petersen"},
+      {"@type": "Person", "name": "Xinjie Zeng"},
+      {"@type": "Person", "name": "Jinyi Qi"},
+      {"@type": "Person", "name": "Amir H. Goldan"}
+    ]
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <!-- Compact navigation bar, shown once the title block scrolls away -->
+  <nav class="topnav" id="topnav" aria-label="Sections">
+    <div class="topnav__inner">
+      <a class="topnav__brand" href="#top">D3Recovery</a>
+      <div class="topnav__links">
+        <a href="#overview">Overview</a>
+        <a href="#video">Video</a>
+        <a href="#method">Method</a>
+        <a href="#results">Results</a>
+        <a href="#citation">Citation</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ============================== TITLE ============================== -->
+  <header class="hero" id="top">
+    <div class="container container--hero">
+      <div class="venues">
+        <a class="venue" href="https://doi.org/10.1002/mp.70661" target="_blank" rel="noopener">Medical Physics 2026</a>
+        <a class="venue" href="https://jnm.snmjournals.org/content/67/supplement_1/261669" target="_blank" rel="noopener">SNMMI 2026 Oral Presentation</a>
+      </div>
+
+      <p class="project-name">D3Recovery</p>
+      <h1 class="title"><span class="nw">Inter-crystal</span> scatter recovery of a <span class="nw">light-sharing</span> <span class="nw">depth-encoding</span> <span class="nw">Prism-PET</span> prototype scanner using a diffusion model</h1>
+
+      <!--
+        AUTHOR PHOTOS live in static/images/authors/.
+        To swap a photo, save a square JPG (400 x 400 px or larger) over the file with the same name.
+        The page crops it to a circle. If a photo file is missing, the initials are shown instead.
+      -->
+      <ul class="author-grid" aria-label="Authors">
+        <li class="author"><a class="author__link" href="https://orcid.org/0000-0001-9198-5535" target="_blank" rel="noopener"><span class="author__photo" data-initials="WT"><img src="static/images/authors/wanbin-tan.jpg" width="400" height="400" alt=""></span><span class="author__name">Wanbin Tan<sup>1,2</sup></span></a></li>
+        <li class="author"><a class="author__link" href="https://sauravdosi.com" target="_blank" rel="noopener"><span class="author__photo" data-initials="SD"><img src="static/images/authors/saurav-dosi.jpg" width="400" height="400" alt=""></span><span class="author__name">Saurav Dosi<sup>1</sup></span></a></li>
+        <li class="author"><a class="author__link" href="https://www.lassp.cornell.edu/people/soroush-shabani-sichani" target="_blank" rel="noopener"><span class="author__photo" data-initials="SS"><img src="static/images/authors/soroush-shabani-sichani.jpg" width="400" height="400" alt=""></span><span class="author__name">Soroush Shabani Sichani<sup>1,3</sup></span></a></li>
+        <li class="author"><a class="author__link" href="https://orcid.org/0000-0002-8162-6026" target="_blank" rel="noopener"><span class="author__photo" data-initials="YL"><img src="static/images/authors/yixin-li.jpg" width="400" height="400" alt=""></span><span class="author__name">Yixin Li<sup>1</sup></span></a></li>
+        <li class="author"><a class="author__link" href="https://orcid.org/0000-0003-2863-4243" target="_blank" rel="noopener"><span class="author__photo" data-initials="ZW"><img src="static/images/authors/zipai-wang.jpg" width="400" height="400" alt=""></span><span class="author__name">Zipai Wang<sup>1,4</sup></span></a></li>
+        <li class="author"><a class="author__link" href="https://orcid.org/0000-0002-6945-0881" target="_blank" rel="noopener"><span class="author__photo" data-initials="EP"><img src="static/images/authors/eric-petersen.jpg" width="400" height="400" alt=""></span><span class="author__name">Eric Petersen<sup>1</sup></span></a></li>
+        <li class="author"><a class="author__link" href="https://orcid.org/0000-0002-8987-3726" target="_blank" rel="noopener"><span class="author__photo" data-initials="XZ"><img src="static/images/authors/xinjie-zeng.jpg" width="400" height="400" alt=""></span><span class="author__name">Xinjie Zeng<sup>1</sup></span></a></li>
+        <li class="author"><a class="author__link" href="https://bme.ucdavis.edu/people/jinyi-qi" target="_blank" rel="noopener"><span class="author__photo" data-initials="JQ" aria-hidden="true"></span><span class="author__name">Jinyi Qi<sup>5</sup></span></a></li>
+        <li class="author"><a class="author__link" href="https://radiology.weill.cornell.edu/amir-h-goldan-phd" target="_blank" rel="noopener"><span class="author__photo" data-initials="AG"><img src="static/images/authors/amir-goldan.jpg" width="400" height="400" alt=""></span><span class="author__name">Amir H. Goldan<sup>1,&dagger;</sup></span></a></li>
+      </ul>
+
+      <ul class="affiliations">
+        <li><sup>1</sup>Weill Cornell Medicine, Cornell University</li>
+        <li><sup>2</sup>Stony Brook University</li>
+        <li><sup>3</sup>Cornell University</li>
+        <li><sup>4</sup>Icahn School of Medicine at Mount Sinai</li>
+        <li><sup>5</sup>University of California, Davis</li>
+      </ul>
+      <p class="footnote-line"><sup>&dagger;</sup>Corresponding author</p>
+      <p class="lab"><a href="https://radiology.weill.cornell.edu/research/x-ray-emission-imaging-laboratory-xeil" target="_blank" rel="noopener"><span class="lab__abbr">XEIL</span><span class="lab__name">X-Ray &amp; Emission Imaging Laboratory<span class="lab__sep"> · </span><span class="lab__org">Weill Cornell Medicine</span></span></a></p>
+
+      <div class="buttons">
+        <a class="btn" href="https://doi.org/10.1002/mp.70661" target="_blank" rel="noopener">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/></svg>
+          <span>Paper</span>
+        </a>
+        <a class="btn" href="https://pubmed.ncbi.nlm.nih.gov/42740403/" target="_blank" rel="noopener">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.2 15.2L20 20"/><path d="M7.8 9.2h5.4M7.8 12h3.6"/></svg>
+          <span>PubMed</span>
+        </a>
+        <a class="btn" href="https://jnm.snmjournals.org/content/67/supplement_1/261669" target="_blank" rel="noopener">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 5.5A1.5 1.5 0 0 1 3.5 4H9a3 3 0 0 1 3 3v13a2.5 2.5 0 0 0-2.5-2.5H3.5A1.5 1.5 0 0 1 2 16z"/><path d="M22 5.5A1.5 1.5 0 0 0 20.5 4H15a3 3 0 0 0-3 3v13a2.5 2.5 0 0 1 2.5-2.5h6a1.5 1.5 0 0 0 1.5-1.5z"/></svg>
+          <span>JNM Abstract</span>
+        </a>
+        <a class="btn" href="#citation">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7H4v6h3v-2.5a2.5 2.5 0 0 0-1-2M17 7h-3v6h3v-2.5a2.5 2.5 0 0 0-1-2"/><path d="M7 13c0 2-1 3.5-3 4.5M17 13c0 2-1 3.5-3 4.5"/></svg>
+          <span>BibTeX</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <!-- ============================== OVERVIEW ============================== -->
+    <section class="section section--teaser" id="overview" aria-labelledby="overview-heading">
+      <div class="container">
+        <div class="tldr">
+          <span class="tldr__tag">TL;DR</span>
+          <p>We recover where an inter-crystal scattered photon first interacted, in crystal and depth, with a diffusion-driven and physics-informed pipeline trained on data from one scanner-level experiment and one simulation. On real phantom scans this keeps roughly 70% of coincidences that would otherwise be thrown away, while restoring much of the resolution lost to mispositioning.</p>
+        </div>
+
+        <!-- One-minute overview, the narrated launch video. Its captions are part of the picture. -->
+        <figure class="teaser" id="teaser">
+          <div class="teaser__frame">
+            <video class="teaser__video" controls preload="metadata" playsinline poster="static/images/overview_poster.webp" aria-label="D3Recovery in one minute">
+              <source src="static/videos/D3Recovery_overview.mp4" type="video/mp4">
+            </video>
+          </div>
+        </figure>
+
+        <p class="eyebrow eyebrow--spaced">Method at a glance</p>
+        <h2 class="section-title" id="overview-heading">D3Recovery, a diffusion-driven tripartite framework</h2>
+        <p>An observed ICS pattern is a superposition of several interactions, and different combinations can produce nearly the same pattern. A deterministic network tends to average over these possibilities. D3Recovery therefore splits the problem into two stages and three cascaded models.</p>
+
+        <!-- Architecture figure with an animated walkthrough (static/js/arch.js) -->
+        <figure class="figure arch" id="arch">
+          <div class="arch__stage">
+            <button class="zoom" type="button" data-full="static/images/fig4_architecture.webp" aria-label="Enlarge the D3Recovery architecture figure">
+              <img src="static/images/fig4_architecture.webp" width="2100" height="2266" fetchpriority="high" alt="D3Recovery architecture. Stage 1, a conditioned denoising diffusion probabilistic model with a U-Net recovers the first-interaction SiPM pattern. Stage 2a, CrystalAttentionNet with ResNet encoders and cross-attention predicts a spatial probability map for the crystal ID. Stage 2b, GuidedDepthNet predicts DOI with a crystal ID head used only as a training regularizer.">
+            </button>
+            <svg class="arch__overlay" id="arch-overlay" viewBox="0 0 2100 2266" preserveAspectRatio="none" aria-hidden="true" focusable="false"></svg>
+          </div>
+          <div class="arch__bar">
+            <div class="arch__controls">
+              <button type="button" class="arch__play is-playing" id="arch-play" aria-pressed="true" aria-label="Pause the walkthrough">
+                <svg class="icon icon--play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>
+                <svg class="icon icon--pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5h3v14H8zM13 5h3v14h-3z"/></svg>
+                <span class="arch__play-text">Pause</span>
+              </button>
+              <div class="arch__steps" id="arch-steps" role="group" aria-label="Walkthrough steps"></div>
+            </div>
+            <p class="arch__caption" id="arch-caption" aria-live="off"><strong>Walkthrough</strong> Pick a step to highlight that part of the model and watch the data flow along its arrows.</p>
+          </div>
+          <figcaption>Architecture of D3Recovery. The whole cascade runs in about 2.78 ms per ICS event on an NVIDIA RTX 6000 Ada GPU, with the diffusion stage taking about 97% of that time. Click the figure to open it at full size.</figcaption>
+        </figure>
+
+        <div class="stages">
+          <article class="stage">
+            <span class="stage__tag">Stage 1</span>
+            <h3>Scatter diffusion</h3>
+            <p>A conditional DDPM with a U-Net backbone denoises an 8 &times; 8 Gaussian grid into the SiPM pattern of the first interaction, conditioned on the ICS pattern and block ID embeddings, and returns its deposited energy.</p>
+            <span class="stage__meta">~105M parameters · 100 timesteps</span>
+          </article>
+          <article class="stage">
+            <span class="stage__tag">Stage 2a</span>
+            <h3>CrystalAttentionNet</h3>
+            <p>Two ResNet encoders read the recovered and the ICS patterns, exchange information through cross-attention, and output a 16 &times; 16 probability map over crystals, keeping the neighborhood structure a 256-way classifier ignores.</p>
+            <span class="stage__meta">~20M parameters</span>
+          </article>
+          <article class="stage">
+            <span class="stage__tag">Stage 2b</span>
+            <h3>GuidedDepthNet</h3>
+            <p>A dual grid encoder regresses DOI. A crystal classification head is used only during training, as a physics-informed regularizer that keeps depth estimates spatially coherent.</p>
+            <span class="stage__meta">~3M parameters</span>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================== COMPARE ============================== -->
+    <section class="section section--tint" id="compare" aria-labelledby="compare-heading">
+      <div class="container container--wide">
+        <p class="eyebrow">Scanner experiments</p>
+        <h2 class="section-title" id="compare-heading">Three reconstructions of the same scan</h2>
+
+        <div class="compare-toolbar">
+          <div class="seg" role="group" aria-label="Which coincidences to reconstruct">
+            <button type="button" class="seg__btn" data-events="ics" aria-pressed="true">ICS events only</button>
+            <button type="button" class="seg__btn" data-events="all" aria-pressed="false">All events</button>
+          </div>
+          <div class="seg seg--pairs" role="group" aria-label="Which two reconstructions to compare">
+            <button type="button" class="seg__btn" data-pair="cog-d3r" aria-pressed="true"><i class="pdot pdot--cog" aria-hidden="true"></i>w/o Recovery<span class="seg__vs">vs</span><i class="pdot pdot--d3r" aria-hidden="true"></i>D3Recovery</button>
+            <button type="button" class="seg__btn" data-pair="rnet-d3r" aria-pressed="false"><i class="pdot pdot--rnet" aria-hidden="true"></i>Recovery-Net<span class="seg__vs">vs</span><i class="pdot pdot--d3r" aria-hidden="true"></i>D3Recovery</button>
+            <button type="button" class="seg__btn" data-pair="cog-rnet" aria-pressed="false"><i class="pdot pdot--cog" aria-hidden="true"></i>w/o Recovery<span class="seg__vs">vs</span><i class="pdot pdot--rnet" aria-hidden="true"></i>Recovery-Net</button>
+          </div>
+        </div>
+
+        <!-- Each image stacks two reconstructions of the same scan, split by one handle. The pair buttons
+             above choose which two, with the first one on the left (static/js/main.js). -->
+        <div class="compare-grid">
+          <figure class="compare-card">
+            <div class="compare" data-phantom="derenzo">
+              <img class="compare__img compare__img--right" src="static/images/compare/derenzo_ics_d3r.webp" width="660" height="660" alt="Ultra-micro Derenzo phantom, ICS events only, reconstructed with D3Recovery">
+              <img class="compare__img compare__img--left" src="static/images/compare/derenzo_ics_cog.webp" width="660" height="660" alt="Ultra-micro Derenzo phantom, ICS events only, reconstructed without recovery (CoG positioning)">
+              <span class="compare__strip compare__strip--left" aria-hidden="true"></span>
+              <span class="compare__strip compare__strip--right" aria-hidden="true"></span>
+              <span class="compare__label compare__label--left" aria-hidden="true">w/o Recovery</span>
+              <span class="compare__label compare__label--right" aria-hidden="true">D3Recovery</span>
+              <div class="compare__handle" role="slider" tabindex="0" aria-label="Ultra-micro Derenzo phantom, edge between w/o Recovery and D3Recovery" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"><span class="compare__knob" aria-hidden="true"></span></div>
+            </div>
+            <figcaption>
+              <div class="compare-card__head">
+                <span class="compare-card__title">Ultra-micro Derenzo phantom</span>
+                <span class="compare-card__what">Mean peak-to-valley gain</span>
+              </div>
+              <ul class="cmp-legend" data-metric="derenzo">
+                <li class="cmp-legend__item cmp-legend__item--cog"><span class="cmp-legend__name">w/o Recovery</span><span class="cmp-legend__val">reference</span></li>
+                <li class="cmp-legend__item cmp-legend__item--rnet is-dim"><span class="cmp-legend__name">Recovery-Net</span><span class="cmp-legend__val">+13%</span></li>
+                <li class="cmp-legend__item cmp-legend__item--d3r"><span class="cmp-legend__name">D3Recovery</span><span class="cmp-legend__val">+24%</span></li>
+              </ul>
+            </figcaption>
+          </figure>
+
+          <figure class="compare-card">
+            <div class="compare" data-phantom="hoffman">
+              <img class="compare__img compare__img--right" src="static/images/compare/hoffman_ics_d3r.webp" width="592" height="592" alt="3D Hoffman brain phantom, ICS events only, reconstructed with D3Recovery">
+              <img class="compare__img compare__img--left" src="static/images/compare/hoffman_ics_cog.webp" width="592" height="592" alt="3D Hoffman brain phantom, ICS events only, reconstructed without recovery (CoG positioning)">
+              <span class="compare__strip compare__strip--left" aria-hidden="true"></span>
+              <span class="compare__strip compare__strip--right" aria-hidden="true"></span>
+              <span class="compare__label compare__label--left" aria-hidden="true">w/o Recovery</span>
+              <span class="compare__label compare__label--right" aria-hidden="true">D3Recovery</span>
+              <div class="compare__handle" role="slider" tabindex="0" aria-label="3D Hoffman brain phantom, edge between w/o Recovery and D3Recovery" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"><span class="compare__knob" aria-hidden="true"></span></div>
+            </div>
+            <figcaption>
+              <div class="compare-card__head">
+                <span class="compare-card__title">3D Hoffman brain phantom</span>
+                <span class="compare-card__what">MAE &darr; &middot; SSIM &uarr;</span>
+              </div>
+              <ul class="cmp-legend" data-metric="hoffman">
+                <li class="cmp-legend__item cmp-legend__item--cog"><span class="cmp-legend__name">w/o Recovery</span><span class="cmp-legend__val">4.208 &middot; 0.376</span></li>
+                <li class="cmp-legend__item cmp-legend__item--rnet is-dim"><span class="cmp-legend__name">Recovery-Net</span><span class="cmp-legend__val">3.554 &middot; 0.431</span></li>
+                <li class="cmp-legend__item cmp-legend__item--d3r"><span class="cmp-legend__name">D3Recovery</span><span class="cmp-legend__val">3.457 &middot; 0.435</span></li>
+              </ul>
+            </figcaption>
+          </figure>
+        </div>
+
+        <p class="teaser-caption">Each image shows one scan from our Prism-PET prototype. Pick two reconstructions to compare, then drag the handle, or swipe sideways on a phone, to move the edge between them. <em>ICS events only</em> uses just the coincidences in which both photons scattered between crystals, the events that conventional positioning handles worst.</p>
+      </div>
+    </section>
+
+    <!-- ============================== ABSTRACT ============================== -->
+    <section class="section" id="abstract" aria-labelledby="abstract-heading">
+      <div class="container">
+        <h2 class="section-title" id="abstract-heading">Abstract</h2>
+        <div class="abstract">
+          <p><span class="abstract__label">Background</span> Inter-crystal scattering (ICS) is a fundamental limitation in ultra-high resolution positron emission tomography (PET), particularly in light-sharing detectors with small crystal elements, where frequent Compton scatter across neighboring crystals obscures the initial interaction position and degrades the spatial resolution, image contrast, and quantitative accuracy. In our previous work, a convolutional neural network, Recovery-Net, was proposed and evaluated to recover the crystal location and depth-of-interaction (DOI) of the initial interaction in a light-sharing depth-encoding Prism-PET detector using Monte Carlo (MC) simulations.</p>
+          <p><span class="abstract__label">Purpose</span> This work aims to develop and experimentally validate a scanner-level ICS recovery framework for a light-sharing depth-encoding Prism-PET prototype scanner using a diffusion model.</p>
+          <p><span class="abstract__label">Methods</span> We first developed a novel method to prepare the training dataset by combining scanner-level simulations with experimental measurements. The resulting dataset comprises an 8 &times; 8 array of silicon photomultiplier (SiPM) signals for each ICS event with associated ground-truth information, including crystal location, DOI, and deposited energy of the initial interaction. Using the SiPM signal patterns as input, we proposed a new diffusion-driven and physics-informed tripartite framework, named D3Recovery, to estimate the 3D position and deposited energy of the initial interaction. The previously proposed Recovery-Net was also implemented and evaluated for comparison. An ultra-micro Derenzo phantom and a 3D Hoffman brain phantom from the Prism-PET prototype scanner experiment were used to evaluate the impact of ICS recovery on image quality.</p>
+          <p><span class="abstract__label">Results</span> Recovery-Net and D3Recovery achieved crystal identification accuracies of 64.1% and 70.1% for ICS events, respectively, with D3Recovery further improving DOI estimation to a full width at half maximum (FWHM) of 3.6 mm compared with 5.1 mm for Recovery-Net. Compared with center-of-gravity (CoG) positioning, D3Recovery reduced the mean crystal localization error from 2.18 mm to 0.99 mm and recovered the deposited energy with an error FWHM of 34.0 keV. For the ultra-micro Derenzo phantom images, Recovery-Net and D3Recovery increased peak-to-valley ratios by 13% and 24% for ICS events and by 14% and 17% for all events, respectively. For the Hoffman brain phantom, Recovery-Net and D3Recovery reduced mean absolute error (MAE) by 15.53% and 17.84% for ICS events and by 16.22% and 18.63% for all events, while increasing structural similarity index measure (SSIM) by 14.59% and 15.60% for ICS events and by 4.60% and 4.75% for all events, respectively. In addition, standard deviation (SD) measured in a uniform region decreased by 12.56% and 20.88% for ICS events, and by 5.26% and 8.48% for all events with Recovery-Net and D3Recovery, respectively.</p>
+          <p><span class="abstract__label">Conclusions</span> Experimental results demonstrate that D3Recovery significantly improves crystal localization, DOI estimation, and reconstructed image quality in high-resolution PET with small-crystal, light-sharing detectors, while providing a practical scanner-level training dataset acquisition strategy for experimental deployment of AI-based ICS recovery. By retaining a large fraction (~70% in our case) of otherwise discarded coincidences, our results show that we achieve a favorable resolution-sensitivity balance that is most beneficial in count-limited, low-dose imaging.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================== VIDEO ============================== -->
+    <section class="section section--tint" id="video" aria-labelledby="video-heading">
+      <div class="container">
+        <h2 class="section-title" id="video-heading">Full video presentation</h2>
+
+        <!-- The talk plays from static/videos/ with captions from the .vtt file beside it. static/js/main.js writes the
+             current caption into the bar under the video, and in full screen the browser draws the same captions itself. -->
+        <figure class="talk" id="talk">
+          <div class="talk__frame">
+            <video class="talk__video" controls preload="metadata" playsinline poster="static/images/talk_poster.webp" aria-label="D3Recovery full video presentation">
+              <source src="static/videos/D3Recovery_talk.mp4" type="video/mp4">
+              <track kind="captions" src="static/videos/D3Recovery_talk.vtt" srclang="en" label="English" default>
+            </video>
+          </div>
+          <figcaption class="talk__bar is-idle">
+            <p class="talk__cc"><span class="talk__line">Captions appear here as the talk plays</span></p>
+            <button type="button" class="talk__toggle" aria-pressed="true" aria-label="Captions" title="Hide captions">CC</button>
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ============================== PROBLEM ============================== -->
+    <section class="section" id="method" aria-labelledby="problem-heading">
+      <div class="container">
+        <p class="eyebrow">Motivation</p>
+        <h2 class="section-title" id="problem-heading">Why inter-crystal scatter matters</h2>
+        <p>Each Prism-PET detector module couples a 16 &times; 16 array of 1.5 &times; 1.5 &times; 20 mm<sup>3</sup> LYSO crystals to an 8 &times; 8 SiPM array, with a prismatoid light guide that shares scintillation light between neighboring crystals so that depth of interaction (DOI) can be read out from a single end. At 511 keV, Compton scatter dominates in LYSO, so many photons deposit energy in more than one crystal. In our phantom scans, <strong>71 to 72% of coincidences contained at least one inter-crystal scatter (ICS) event.</strong></p>
+        <p>Center-of-gravity (CoG) positioning averages the light from all interaction sites, which assigns an ICS event to an averaged or wrong crystal and mispositions its line of response. Rejecting ICS events avoids the blur but discards most of the counts. We instead recover the <em>first</em> interaction, the one that defines the true line of response.</p>
+
+        <div class="ics-diagrams">
+          <figure class="ics-panel">
+            <figcaption class="ics-panel__title">Photoelectric event</figcaption>
+            <svg class="ics-svg" viewBox="0 0 400 280" role="img" aria-labelledby="pe-t pe-d">
+              <title id="pe-t">Photoelectric event</title>
+              <desc id="pe-d">A 511 keV photon is absorbed in a single crystal. Its light reaches the SiPM below that crystal, so center-of-gravity positioning finds the correct crystal.</desc>
+              <g class="lg"><path d="M32 46 72 30 112 46Z"/><path d="M116 46 156 30 196 46Z"/><path d="M200 46 240 30 280 46Z"/><path d="M284 46 324 30 364 46Z"/></g>
+              <g class="xtal"><rect x="32" y="46" width="38" height="160" rx="2"/><rect x="74" y="46" width="38" height="160" rx="2"/><rect x="116" y="46" width="38" height="160" rx="2"/><rect x="158" y="46" width="38" height="160" rx="2"/><rect x="200" y="46" width="38" height="160" rx="2"/><rect x="242" y="46" width="38" height="160" rx="2"/><rect x="284" y="46" width="38" height="160" rx="2"/><rect x="326" y="46" width="38" height="160" rx="2"/></g>
+              <path class="light" d="M135 142 L118 206 L152 206Z" opacity=".55"/>
+              <g class="sipm"><rect x="32" y="210" width="80" height="14" rx="2"/><rect x="116" y="210" width="80" height="14" rx="2"/><rect x="200" y="210" width="80" height="14" rx="2"/><rect x="284" y="210" width="80" height="14" rx="2"/></g>
+              <rect class="sipm-glow" x="116" y="210" width="80" height="14" rx="2" opacity=".9"/>
+              <path class="gamma" d="M135 4 V128"/>
+              <path class="gamma-head" d="M135 136 l-5-10 h10Z"/>
+              <text class="lbl lbl--gamma" x="143" y="16">&#947; 511 keV</text>
+              <path class="star star--pe" d="M135,131 L137.6,136.9 L143.6,137.2 L138.9,141.2 L140.4,147.3 L135,144 L129.6,147.3 L131.1,141.2 L126.4,137.2 L132.4,136.9Z"/>
+              <text class="lbl lbl--side" x="372" y="221">SiPM</text>
+              <path class="mark mark--good" d="M135 232 l-7 10 h14Z"/>
+              <text class="lbl lbl--good" x="135" y="260" text-anchor="middle">CoG</text>
+              <text class="lbl lbl--muted" x="135" y="275" text-anchor="middle">correct crystal</text>
+            </svg>
+          </figure>
+
+          <figure class="ics-panel">
+            <figcaption class="ics-panel__title">Inter-crystal scatter event</figcaption>
+            <svg class="ics-svg" viewBox="0 0 400 280" role="img" aria-labelledby="ics-t ics-d">
+              <title id="ics-t">Inter-crystal scatter event</title>
+              <desc id="ics-d">The photon Compton scatters in one crystal and is absorbed in another. Light reaches two groups of SiPMs, so center-of-gravity positioning lands between the two sites, while D3Recovery recovers the crystal and depth of the first interaction.</desc>
+              <g class="lg"><path d="M32 46 72 30 112 46Z"/><path d="M116 46 156 30 196 46Z"/><path d="M200 46 240 30 280 46Z"/><path d="M284 46 324 30 364 46Z"/></g>
+              <g class="xtal"><rect x="32" y="46" width="38" height="160" rx="2"/><rect x="74" y="46" width="38" height="160" rx="2"/><rect x="116" y="46" width="38" height="160" rx="2"/><rect x="158" y="46" width="38" height="160" rx="2"/><rect x="200" y="46" width="38" height="160" rx="2"/><rect x="242" y="46" width="38" height="160" rx="2"/><rect x="284" y="46" width="38" height="160" rx="2"/><rect x="326" y="46" width="38" height="160" rx="2"/></g>
+              <path class="light" d="M135 102 L117 206 L153 206Z" opacity=".3"/>
+              <path class="light" d="M303 170 L285 206 L321 206Z" opacity=".6"/>
+              <g class="sipm"><rect x="32" y="210" width="80" height="14" rx="2"/><rect x="116" y="210" width="80" height="14" rx="2"/><rect x="200" y="210" width="80" height="14" rx="2"/><rect x="284" y="210" width="80" height="14" rx="2"/></g>
+              <rect class="sipm-glow" x="116" y="210" width="80" height="14" rx="2" opacity=".35"/>
+              <rect class="sipm-glow" x="284" y="210" width="80" height="14" rx="2" opacity=".95"/>
+              <path class="gamma" d="M135 4 V88"/>
+              <path class="gamma-head" d="M135 96 l-5-10 h10Z"/>
+              <text class="lbl lbl--gamma" x="143" y="16">&#947; 511 keV</text>
+              <path class="gamma gamma--scatter" d="M141 104 L296 166"/>
+              <circle class="d3r-ring" cx="135" cy="100" r="15"/>
+              <path class="star star--cs" d="M135,91 L137.6,96.9 L143.6,97.2 L138.9,101.2 L140.4,107.3 L135,104 L129.6,107.3 L131.1,101.2 L126.4,97.2 L132.4,96.9Z"/>
+              <path class="star star--pe" d="M303,159 L305.6,164.9 L311.6,165.2 L306.9,169.2 L308.4,175.3 L303,172 L297.6,175.3 L299.1,169.2 L294.4,165.2 L300.4,164.9Z"/>
+              <text class="lbl lbl--side" x="372" y="221">SiPM</text>
+              <path class="mark mark--d3r" d="M135 232 l-7 10 h14Z"/>
+              <text class="lbl lbl--d3r" x="135" y="260" text-anchor="middle">D3Recovery</text>
+              <text class="lbl lbl--muted" x="135" y="275" text-anchor="middle">first interaction</text>
+              <path class="mark mark--bad" d="M271 232 l-7 10 h14Z"/>
+              <text class="lbl lbl--bad" x="271" y="260" text-anchor="middle">CoG</text>
+              <text class="lbl lbl--muted" x="271" y="275" text-anchor="middle">mispositioned</text>
+            </svg>
+          </figure>
+        </div>
+        <ul class="ics-legend" aria-label="Diagram legend">
+          <li><svg viewBox="-10 -10 20 20" aria-hidden="true"><path class="star star--cs" d="M0,-9 L2.6,-3.1 L8.6,-2.8 L3.9,1.2 L5.4,7.3 L0,4 L-5.4,7.3 L-3.9,1.2 L-8.6,-2.8 L-2.6,-3.1Z"/></svg>Compton scatter</li>
+          <li><svg viewBox="-10 -10 20 20" aria-hidden="true"><path class="star star--pe" d="M0,-9 L2.6,-3.1 L8.6,-2.8 L3.9,1.2 L5.4,7.3 L0,4 L-5.4,7.3 L-3.9,1.2 L-8.6,-2.8 L-2.6,-3.1Z"/></svg>Photoelectric absorption</li>
+          <li><span class="swatch swatch--light" aria-hidden="true"></span>Scintillation light</li>
+          <li><span class="swatch swatch--lg" aria-hidden="true"></span>Prismatoid light guide</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============================== DATASET ============================== -->
+    <section class="section section--flush-top" aria-labelledby="data-heading">
+      <div class="container">
+        <p class="eyebrow">Method · Training data</p>
+        <h2 class="section-title" id="data-heading">One experiment plus one simulation</h2>
+        <p>Supervised ICS recovery needs the true first interaction of every training event, which a measurement alone cannot provide. Labeling it experimentally would mean irradiating each of the 10,240 crystals in the scanner with a pencil beam at every depth. We avoid that with a hybrid pipeline.</p>
+        <ol class="steps">
+          <li><strong>Measure</strong> We scan a uniform cylinder phantom once and keep the photoelectric events, building a repository of at least 100 experimental SiPM patterns for every crystal at each DOI level from 1 to 20 mm.</li>
+          <li><strong>Simulate</strong> A single matching GATE simulation of the scanner records the crystal, DOI and deposited energy of up to four interactions per photon.</li>
+          <li><strong>Synthesize</strong> For each simulated interaction we draw a measured pattern from the same block, crystal and DOI bin, scale it to the simulated energy and sum the patterns channel by channel.</li>
+        </ol>
+        <p>The result is about <strong>136 million ICS events</strong> whose inputs carry real detector response while their labels come from simulation.</p>
+
+        <figure class="figure">
+          <button class="zoom" type="button" data-full="static/images/fig1_training_data.webp" aria-label="Enlarge the training data pipeline figure">
+            <img src="static/images/fig1_training_data.webp" width="2100" height="1332" loading="lazy" alt="Pipeline for the training dataset. Top, a cylinder phantom experiment is filtered for photoelectric events to build experimental SiPM patterns for every crystal and DOI bin. Bottom, a GATE simulation provides the interaction sites and energies, and experimental patterns are energy weighted and combined into a synthetic ICS SiPM pattern with first-interaction labels.">
+          </button>
+          <figcaption>(a) Building the repository of experimental photoelectric SiPM patterns for all crystals of the scanner. (b) Generating labeled training events by combining the GATE simulation with that repository.</figcaption>
+        </figure>
+
+        <figure class="figure figure--narrow">
+          <button class="zoom" type="button" data-full="static/images/fig2_synthetic_ics.webp" aria-label="Enlarge the synthetic ICS example">
+            <img src="static/images/fig2_synthetic_ics.webp" width="2100" height="615" loading="lazy" alt="Three 8 by 8 SiPM patterns. The first interaction deposits 97 keV, the second 418 keV, and their sum forms a synthetic 515 keV ICS pattern.">
+          </button>
+          <figcaption>A synthetic ICS pattern. A 97 keV first interaction and a 418 keV second interaction add up to the observed 515 keV pattern, in which the first interaction is easy to miss. Values are deposited-energy-equivalent keV after calibration.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ============================== MODEL ============================== -->
+    <section class="section section--flush-top" aria-labelledby="model-heading">
+      <div class="container">
+        <p class="eyebrow">Method · Model</p>
+        <h2 class="section-title" id="model-heading">Inside the diffusion stage</h2>
+        <p>The walkthrough at the top of the page follows one ICS event through all three models. Stage 1 does the hardest part. It has to pull the pattern of the first interaction out of a pattern where several interactions overlap, and a diffusion model can represent that ambiguity where a deterministic network would average it away.</p>
+
+        <!-- Stage 1 interactive viewer -->
+        <div class="viz" id="stage1-viz" aria-labelledby="s1-heading">
+          <div class="viz__head">
+            <div>
+              <h3 class="viz__title" id="s1-heading">Stage 1 in action</h3>
+              <p class="viz__sub">Watch the diffusion model turn Gaussian noise into the first-interaction SiPM pattern for example ICS events. Pick an event and scrub through the denoising steps.</p>
+            </div>
+            <button type="button" class="viz__play" id="s1-play" aria-label="Play the denoising animation">
+              <svg class="icon icon--play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>
+              <svg class="icon icon--pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5h3v14H8zM13 5h3v14h-3z"/></svg>
+              <span class="viz__play-text" aria-hidden="true"><span class="viz__play-t viz__play-t--play">Play</span><span class="viz__play-t viz__play-t--pause">Pause</span></span>
+            </button>
+          </div>
+          <div class="chips" id="s1-events" role="group" aria-label="Test event"></div>
+          <div class="s1-main">
+            <figure class="panel">
+              <div class="heat heat--8" id="s1-ics" role="img" aria-label="Observed ICS SiPM pattern"></div>
+              <figcaption>Observed ICS pattern<span>model condition</span></figcaption>
+            </figure>
+            <div class="s1-arrow" aria-hidden="true">
+              <svg viewBox="0 0 40 24"><path d="M2 12h32M26 5l8 7-8 7"/></svg>
+            </div>
+            <figure class="panel panel--focus">
+              <div class="heat heat--8" id="s1-step" role="img" aria-label="Current denoising step"></div>
+              <figcaption id="s1-caps"><b class="panel__main">Recovered x&#770;<sub>0</sub></b><span>Stage 1 output</span></figcaption>
+            </figure>
+            <div class="s1-vs" aria-hidden="true">vs.</div>
+            <figure class="panel">
+              <div class="heat heat--8" id="s1-gt" role="img" aria-label="Ground-truth first-interaction pattern"></div>
+              <figcaption>Ground truth<span>first interaction</span></figcaption>
+            </figure>
+          </div>
+          <div class="filmstrip" id="s1-strip" role="group" aria-label="Denoising steps"></div>
+          <p class="viz__note">Each panel uses its own color scale (viridis). Stage 1 is not always right, which is why Stage 2 looks at both the recovered and the original ICS pattern.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================== RESULTS ============================== -->
+    <section class="section section--tint" id="results" aria-labelledby="results-heading">
+      <div class="container container--wide">
+        <p class="eyebrow">Results</p>
+        <h2 class="section-title" id="results-heading">Results at a glance</h2>
+        <ul class="stats">
+          <li class="stat">
+            <span class="stat__value">70.1<small>%</small></span>
+            <span class="stat__label">crystal identification accuracy for ICS events</span>
+            <span class="stat__note">CoG 22.8% · <span class="nw">Recovery-Net</span> 64.1%</span>
+          </li>
+          <li class="stat">
+            <span class="stat__value">3.6<small> mm</small></span>
+            <span class="stat__label">DOI error FWHM for ICS events</span>
+            <span class="stat__note"><span class="nw">Recovery-Net</span> 5.1&nbsp;mm</span>
+          </li>
+          <li class="stat">
+            <span class="stat__value">0.99<small> mm</small></span>
+            <span class="stat__label">mean crystal localization error</span>
+            <span class="stat__note">CoG 2.18&nbsp;mm · <span class="nw">Recovery-Net</span> 1.16&nbsp;mm</span>
+          </li>
+          <li class="stat">
+            <span class="stat__value">+24<small>%</small></span>
+            <span class="stat__label">peak-to-valley ratio, Derenzo phantom (ICS events)</span>
+            <span class="stat__note"><span class="nw">Recovery-Net</span> +13%</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="container results-events">
+        <p class="eyebrow">Results · Test events</p>
+        <h2 class="section-title" id="events-heading">Locating the first interaction</h2>
+        <p>On held-out ICS events, D3Recovery identifies the correct crystal 70.1% of the time, against 22.8% for CoG and 64.1% for Recovery-Net, and narrows the DOI error distribution from 5.1 mm to 3.6 mm FWHM, about a 29% reduction. The mean crystal localization error falls from 2.18 &plusmn; 1.99 mm with CoG and 1.16 &plusmn; 2.09 mm with Recovery-Net to 0.99 &plusmn; 1.98 mm, and the deposited energy of the first interaction is recovered with an error FWHM of 34.0 keV.</p>
+
+        <figure class="table-fig">
+          <figcaption class="table-cap">Positioning of the first interaction for ICS events, by location of the primary interaction within the detector block.</figcaption>
+          <div class="table-wrap">
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th rowspan="2" scope="col">Region</th>
+                <th rowspan="2" scope="col">Share of events (%)</th>
+                <th colspan="3" scope="colgroup">Crystal ID accuracy (%) &uarr;</th>
+                <th colspan="2" scope="colgroup">DOI FWHM (mm) &darr;</th>
+              </tr>
+              <tr>
+                <th scope="col">CoG</th><th scope="col">Recovery-Net</th><th scope="col" class="is-ours">D3Recovery</th>
+                <th scope="col">Recovery-Net</th><th scope="col" class="is-ours">D3Recovery</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">Center</th><td>86.1</td><td>23.5</td><td>65.0</td><td class="best">70.8</td><td>4.9</td><td class="best">3.5</td></tr>
+              <tr><th scope="row">Edge</th><td>7.7</td><td>18.4</td><td>62.9</td><td class="best">69.9</td><td>6.7</td><td class="best">4.6</td></tr>
+              <tr><th scope="row">Corner</th><td>6.2</td><td>19.4</td><td>53.0</td><td class="best">60.0</td><td>7.2</td><td class="best">4.9</td></tr>
+              <tr class="row-total"><th scope="row">All</th><td>100.0</td><td>22.8</td><td>64.1</td><td class="best">70.1</td><td>5.1</td><td class="best">3.6</td></tr>
+            </tbody>
+          </table>
+          </div>
+        </figure>
+
+        <div class="figure-pair">
+          <figure class="figure">
+            <button class="zoom" type="button" data-full="static/images/fig6_event_results.webp" aria-label="Enlarge the event-level results figure">
+              <img src="static/images/fig6_event_results.webp" width="2099" height="1237" loading="lazy" alt="Event-level results. Ground truth, ICS and recovered SiPM patterns with ground truth, D3Recovery and CoG crystal locations marked, a narrow distribution of energy differences centered at zero, and flood histograms where CoG shows a blurred square and D3Recovery shows well separated crystal clusters.">
+            </button>
+            <figcaption>(a to c) One test event. D3Recovery finds the true crystal while CoG lands elsewhere. (d) Error of the recovered deposited energy. (e, f) Flood histograms built with CoG and with the patterns recovered by D3Recovery, which separate the crystals again.</figcaption>
+          </figure>
+          <figure class="figure figure--compact">
+            <button class="zoom" type="button" data-full="static/images/doi_error_distribution.webp" aria-label="Enlarge the DOI error distribution">
+              <img src="static/images/doi_error_distribution.webp" width="1540" height="1056" loading="lazy" alt="Histogram of DOI error in millimeters for w/o Recovery, Recovery-Net and D3Recovery. D3Recovery has the tallest and narrowest peak around zero.">
+            </button>
+            <figcaption>Distribution of DOI errors for ICS events. D3Recovery gives the tallest, narrowest peak around zero.</figcaption>
+          </figure>
+        </div>
+
+        <!-- Stage 2 interactive viewer -->
+        <div class="viz" id="stage2-viz" aria-labelledby="s2-heading">
+          <div class="viz__head">
+            <div>
+              <h3 class="viz__title" id="s2-heading">Stage 2 on four representative events</h3>
+              <p class="viz__sub">Stage 2 reads both the recovered and the original pattern, so it can still land on the right crystal when Stage 1 is off. We also show the rarer failure cases.</p>
+            </div>
+          </div>
+          <div class="tabs" id="s2-tabs" role="tablist" aria-label="Representative event"></div>
+          <div class="s2-body" id="s2-body" role="tabpanel">
+            <div class="s2-status" id="s2-status"></div>
+            <div class="s2-grid">
+              <figure class="panel"><div class="heat heat--8" id="s2-ics" role="img" aria-label="ICS input pattern"></div><figcaption>ICS input<span>8 &times; 8 SiPM signals</span></figcaption></figure>
+              <figure class="panel"><div class="heat heat--8" id="s2-pred" role="img" aria-label="Stage 1 recovered pattern"></div><figcaption>Stage 1 recovered<span>first interaction, predicted</span></figcaption></figure>
+              <figure class="panel"><div class="heat heat--8" id="s2-gt" role="img" aria-label="Ground-truth first interaction pattern"></div><figcaption>Ground truth<span>first interaction, true</span></figcaption></figure>
+              <figure class="panel panel--crystal"><div class="heat heat--16" id="s2-heat" role="img" aria-label="Crystal probability map"></div><figcaption>Stage 2a crystal map<span class="key"><i class="key__gt"></i>truth <i class="key__pred"></i>prediction</span></figcaption></figure>
+            </div>
+            <div class="doi-strip" id="s2-doi" role="img"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================== DERENZO ============================== -->
+    <section class="section" aria-labelledby="derenzo-heading">
+      <div class="container">
+        <p class="eyebrow">Results · Scanner experiments</p>
+        <h2 class="section-title" id="derenzo-heading">Ultra-micro Derenzo phantom</h2>
+        <p>We filled the phantom (rods from 0.80 to 2.50 mm) with 2 mCi of <sup>18</sup>F-FDG and scanned it for 6 hours on the Prism-PET prototype, collecting 171 million coincidences of which 72% contained at least one ICS event. Images were reconstructed with CASToR (30 iterations, 10 subsets, 0.25 mm voxels). Compared with no recovery, Recovery-Net and D3Recovery raise the average peak-to-valley ratio by <strong>13% and 24% for ICS events</strong> and by 14% and 17% for all events.</p>
+
+        <figure class="figure">
+          <button class="zoom" type="button" data-full="static/images/fig7_derenzo.webp" aria-label="Enlarge the Derenzo phantom reconstructions">
+            <img src="static/images/fig7_derenzo.webp" width="2100" height="930" loading="lazy" alt="Derenzo phantom. Ground-truth layout of rods from 0.8 to 2.5 mm, the photoelectric-only image, and images from ICS events and from all events without recovery, with Recovery-Net and with D3Recovery. D3Recovery resolves the small rods most clearly.">
+          </button>
+          <figcaption>(a) Phantom layout with the line-profile positions. (b) Reference image from photoelectric events. (c) ICS events and all events, without recovery and with Recovery-Net or D3Recovery.</figcaption>
+        </figure>
+
+        <figure class="figure figure--narrow">
+          <button class="zoom" type="button" data-full="static/images/fig8_line_profiles.webp" aria-label="Enlarge the line profiles">
+            <img src="static/images/fig8_line_profiles.webp" width="1484" height="1116" loading="lazy" alt="Line profiles across all rod diameters for ICS events and for all events. D3Recovery has higher peaks and lower valleys than w/o Recovery and Recovery-Net.">
+          </button>
+          <figcaption>Line profiles across each rod group for (a) ICS events and (b) all events.</figcaption>
+        </figure>
+
+        <figure class="table-fig">
+          <figcaption class="table-cap">Peak-to-valley ratios across the ultra-micro Derenzo phantom (higher is better). PE events is the photoelectric-only reference.</figcaption>
+          <div class="table-wrap">
+          <table class="results-table results-table--dense">
+            <thead>
+              <tr>
+                <th rowspan="2" scope="col">Rod diameter (mm)</th>
+                <th rowspan="2" scope="col">PE events</th>
+                <th colspan="3" scope="colgroup">ICS events</th>
+                <th colspan="3" scope="colgroup">All events</th>
+              </tr>
+              <tr>
+                <th scope="col">w/o Recovery</th><th scope="col">Recovery-Net</th><th scope="col" class="is-ours">D3Recovery</th>
+                <th scope="col">w/o Recovery</th><th scope="col">Recovery-Net</th><th scope="col" class="is-ours">D3Recovery</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">2.50</th><td>38.90</td><td>7.25</td><td>7.98</td><td class="best">8.30</td><td>15.55</td><td>16.04</td><td class="best">16.76</td></tr>
+              <tr><th scope="row">2.00</th><td>6.97</td><td>1.73</td><td>2.43</td><td class="best">2.90</td><td>3.20</td><td>4.15</td><td class="best">4.24</td></tr>
+              <tr><th scope="row">1.50</th><td>6.24</td><td>1.68</td><td>1.76</td><td class="best">1.97</td><td>3.29</td><td>3.46</td><td class="best">3.50</td></tr>
+              <tr><th scope="row">1.25</th><td>9.96</td><td>1.73</td><td>2.05</td><td class="best">2.17</td><td>3.71</td><td>4.07</td><td class="best">4.28</td></tr>
+              <tr><th scope="row">1.00</th><td>1.75</td><td>1.12</td><td>1.13</td><td class="best">1.21</td><td>1.54</td><td>1.62</td><td class="best">1.63</td></tr>
+              <tr><th scope="row">0.80</th><td>7.97</td><td>1.55</td><td>1.57</td><td class="best">1.76</td><td>2.71</td><td>3.57</td><td class="best">3.65</td></tr>
+            </tbody>
+          </table>
+          </div>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ============================== HOFFMAN ============================== -->
+    <section class="section section--flush-top" aria-labelledby="hoffman-heading">
+      <div class="container">
+        <h2 class="section-title" id="hoffman-heading">3D Hoffman brain phantom</h2>
+        <p>The brain phantom was filled with 1.9 mCi of <sup>18</sup>F-FDG and scanned for 6 hours, giving 425 million coincidences, 71% of them with at least one ICS event (CASToR, 7 iterations, 8 subsets, 0.5 mm voxels). Against a reference reconstructed from photoelectric events only, D3Recovery gives the lowest error, the highest structural similarity and the lowest noise in a uniform region, for ICS events and for all events.</p>
+
+        <figure class="figure">
+          <button class="zoom" type="button" data-full="static/images/fig9_hoffman.webp" aria-label="Enlarge the Hoffman phantom reconstructions">
+            <img src="static/images/fig9_hoffman.webp" width="2100" height="890" loading="lazy" alt="Hoffman brain phantom. Ground truth with a 15 mm uniform region and a zoomed gray matter fold, the photoelectric-only image, and images from ICS events and from all events without recovery, with Recovery-Net and with D3Recovery, each with a zoomed inset.">
+          </button>
+          <figcaption>(a) Ground truth with the 15 mm uniform region and the zoomed gray matter fold. (b) Photoelectric-only reference. (c) ICS events and all events, without recovery and with Recovery-Net or D3Recovery.</figcaption>
+        </figure>
+
+        <figure class="table-fig">
+          <figcaption class="table-cap">Image quality against the photoelectric-only reference. MAE and SD lower is better, SSIM higher is better.</figcaption>
+          <div class="table-wrap">
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th rowspan="2" scope="col">Metric</th>
+                <th colspan="3" scope="colgroup">ICS events</th>
+                <th colspan="3" scope="colgroup">All events</th>
+              </tr>
+              <tr>
+                <th scope="col">w/o Recovery</th><th scope="col">Recovery-Net</th><th scope="col" class="is-ours">D3Recovery</th>
+                <th scope="col">w/o Recovery</th><th scope="col">Recovery-Net</th><th scope="col" class="is-ours">D3Recovery</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">MAE &darr;</th><td>4.208</td><td>3.554</td><td class="best">3.457</td><td>2.143</td><td>1.796</td><td class="best">1.744</td></tr>
+              <tr><th scope="row">SSIM &uarr;</th><td>0.376</td><td>0.431</td><td class="best">0.435</td><td>0.691</td><td>0.723</td><td class="best">0.724</td></tr>
+              <tr><th scope="row">SD &darr;</th><td>6.049</td><td>5.288</td><td class="best">4.786</td><td>3.899</td><td>3.693</td><td class="best">3.568</td></tr>
+            </tbody>
+          </table>
+          </div>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ============================== LOW COUNT ============================== -->
+    <section class="section section--flush-top" aria-labelledby="lowcount-heading">
+      <div class="container">
+        <h2 class="section-title" id="lowcount-heading">Why keep ICS events at all?</h2>
+        <p>With plenty of counts, a photoelectric-only image is the resolution upper bound. But rejecting ICS events throws away about 70% of the data. When we keep only 10% of the Hoffman acquisition, the image built from all events already beats the photoelectric-only image on MAE, SSIM and SD, and adding D3Recovery improves it further. Recovering scattered events is most valuable exactly where counts are scarce, as in low-dose imaging.</p>
+
+        <figure class="figure">
+          <button class="zoom" type="button" data-full="static/images/fig10_low_count.webp" aria-label="Enlarge the low-count comparison">
+            <img src="static/images/fig10_low_count.webp" width="2101" height="640" loading="lazy" alt="Hoffman phantom reconstructed from 10% of the data. Photoelectric events only give MAE 3.942, SSIM 0.417 and SD 11.897. All events without recovery give MAE 3.027, SSIM 0.460 and SD 7.149. All events with D3Recovery give MAE 2.746, SSIM 0.490 and SD 6.545.">
+          </button>
+          <figcaption>Hoffman phantom from 10% of the counts. (a) Photoelectric events only. (b) All events, without recovery and with D3Recovery. The reference image uses all photoelectric events.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ============================== RELATED ============================== -->
+    <section class="section section--tint" id="related" aria-labelledby="related-heading">
+      <div class="container">
+        <h2 class="section-title" id="related-heading">Related work from our group</h2>
+        <ul class="related">
+          <li>
+            <a href="https://jnm.snmjournals.org/content/67/supplement_1/261694" target="_blank" rel="noopener">D3RecoveryMux: Inter-crystal scatter recovery for TOF-DOI Prism-PET detectors with multiplexed readout using diffusion model</a>
+            <span>Dosi et al., <em>Journal of Nuclear Medicine</em> (SNMMI abstract), 2026. The follow-up to D3Recovery, presented as a spotlight poster at SNMMI 2026.</span>
+          </li>
+          <li>
+            <a href="https://doi.org/10.1088/1361-6560/ad19f1" target="_blank" rel="noopener">Resolving inter-crystal scatter in a light-sharing depth-encoding PET detector</a>
+            <span>Petersen et al., <em>Physics in Medicine &amp; Biology</em>, 2024. Recovery-Net, the CNN baseline trained on simulated data.</span>
+          </li>
+          <li>
+            <a href="https://doi.org/10.1002/mp.16223" target="_blank" rel="noopener">A conformal TOF&ndash;DOI Prism-PET prototype scanner for high-resolution quantitative neuroimaging</a>
+            <span>Zeng et al., <em>Medical Physics</em>, 2023. The Prism-PET prototype brain scanner.</span>
+          </li>
+          <li>
+            <a href="https://jnm.snmjournals.org/content/61/10/1528" target="_blank" rel="noopener">High-resolution depth-encoding PET detector module with prismatoid light-guide array</a>
+            <span>LaBella et al., <em>Journal of Nuclear Medicine</em>, 2020. The Prism-PET detector concept.</span>
+          </li>
+          <li>
+            <a href="https://jnm.snmjournals.org/content/65/supplement_2/242393" target="_blank" rel="noopener">Experimental scanner-level inter-crystal scatter recovery for TOF-DOI prototype Prism-PET brain scanner</a>
+            <span>Wang et al., <em>Journal of Nuclear Medicine</em> (SNMMI abstract), 2024.</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============================== CITATION ============================== -->
+    <section class="section" id="citation" aria-labelledby="citation-heading">
+      <div class="container">
+        <h2 class="section-title" id="citation-heading">Citation</h2>
+        <p class="section-lead">If you find this work useful, please cite the journal article.</p>
+
+        <div class="bib">
+          <div class="bib__bar">
+            <div class="bib__tabs" role="tablist" aria-label="Citation format">
+              <button type="button" role="tab" class="bib__tab" id="bibtab-mp" aria-selected="true" aria-controls="bib-mp">Medical Physics 2026</button>
+              <button type="button" role="tab" class="bib__tab" id="bibtab-snmmi" aria-selected="false" aria-controls="bib-snmmi" tabindex="-1">SNMMI 2026 abstract</button>
+            </div>
+            <div class="bib__actions">
+              <a class="bib__action" href="static/files/d3recovery.bib" download>
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>.bib
+              </a>
+              <button type="button" class="bib__action" id="bib-copy">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
+                <span id="bib-copy-text">Copy</span>
+              </button>
+            </div>
+          </div>
+<pre class="bib__code" id="bib-mp" role="tabpanel" aria-labelledby="bibtab-mp"><code>@article{tan2026d3recovery,
+  title   = {Inter-crystal scatter recovery of a light-sharing depth-encoding {Prism-PET} prototype scanner using a diffusion model},
+  author  = {Tan, Wanbin and Dosi, Saurav and Shabani Sichani, Soroush and Li, Yixin and Wang, Zipai and Petersen, Eric and Zeng, Xinjie and Qi, Jinyi and Goldan, Amir H.},
+  journal = {Medical Physics},
+  volume  = {53},
+  pages   = {e70661},
+  year    = {2026},
+  doi     = {10.1002/mp.70661}
+}</code></pre>
+<pre class="bib__code" id="bib-snmmi" role="tabpanel" aria-labelledby="bibtab-snmmi" hidden><code>@article{tan2026d3recoverysnmmi,
+  title   = {{D3Recovery}: Inter-crystal scatter recovery for {TOF-DOI} {Prism-PET} scanner using diffusion model},
+  author  = {Tan, Wanbin and Dosi, Saurav and Shabani Sichani, Soroush and Li, Yixin and Wang, Zipai and Petersen, Eric and Goldan, Amirhossein},
+  journal = {Journal of Nuclear Medicine},
+  volume  = {67},
+  number  = {supplement 1},
+  pages   = {261669},
+  year    = {2026},
+  note    = {SNMMI 2026 Annual Meeting, oral presentation}
+}</code></pre>
+        </div>
+        <p class="plain-cite">Tan W, Dosi S, et al. Inter-crystal scatter recovery of a light-sharing depth-encoding Prism-PET prototype scanner using a diffusion model. <em>Med Phys</em>. 2026;53:e70661. <a href="https://doi.org/10.1002/mp.70661" target="_blank" rel="noopener">doi.org/10.1002/mp.70661</a></p>
+      </div>
+    </section>
+
+    <!-- ============================== ACKNOWLEDGMENTS ============================== -->
+    <section class="section section--flush-top" id="acknowledgments" aria-labelledby="ack-heading">
+      <div class="container">
+        <h2 class="section-title section-title--small" id="ack-heading">Acknowledgments</h2>
+        <p class="ack">This work was supported by the National Institute of Biomedical Imaging and Bioengineering (NIBIB) under grant number R01EB030413. Research reported in this publication was supported by the National Institute on Aging (NIA) of the National Institutes of Health (NIH) under Award Number U01AG082845.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>Figures and abstract are reproduced from the published article, &copy; 2026 American Association of Physicists in Medicine. The talk video and interactive event data come from the SNMMI 2026 presentation.</p>
+      <p><a href="https://radiology.weill.cornell.edu/research/x-ray-emission-imaging-laboratory-xeil" target="_blank" rel="noopener">X-Ray &amp; Emission Imaging Laboratory (XEIL)</a> · Department of Radiology · Weill Cornell Medicine</p>
+    </div>
+  </footer>
+
+  <!-- Full-size figure viewer -->
+  <dialog class="lightbox" id="lightbox" aria-label="Enlarged figure">
+    <button type="button" class="lightbox__close" aria-label="Close">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <img class="lightbox__img" alt="">
+  </dialog>
+
+  <script src="static/js/data.js" defer></script>
+  <script src="static/js/main.js" defer></script>
+  <script src="static/js/arch.js" defer></script>
+</body>
+</html>

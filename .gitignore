@@ -1,0 +1,8 @@
+# macOS folder files
+.DS_Store
+
+# leftovers from the old slide viewer, which the page no longer uses
+static/slides/
+static/js/slides.js
+static/files/D3Recovery_SNMMI2026_slides.pdf
+static/images/authors/jinyi-qi.jpg

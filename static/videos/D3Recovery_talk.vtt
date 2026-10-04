@@ -1,0 +1,442 @@
+WEBVTT
+
+1
+00:00:00.750 --> 00:00:01.930
+I'm Saurav.
+
+2
+00:00:01.950 --> 00:00:04.810
+This is <b>D3Recovery</b> and it was developed
+
+3
+00:00:04.830 --> 00:00:08.950
+at the X-ray and Emission Imaging Lab at Weill Cornell Medicine.
+
+4
+00:00:08.970 --> 00:00:11.558
+This is our <b>Prism-PET 1</b> scanner.
+
+5
+00:00:11.578 --> 00:00:16.698
+It has 40 detector blocks to detect the gamma ray emission from the human brain.
+
+6
+00:00:16.890 --> 00:00:23.206
+Our PET detector block has a 16 × 16 crystal array and an 8 × 8 SiPM grid,
+
+7
+00:00:23.226 --> 00:00:26.982
+with a 4-to-1 crystal-to-SiPM coupling ratio.
+
+8
+00:00:27.002 --> 00:00:32.758
+This figure visually illustrates the first interaction in an inter-crystal scatter event,
+
+9
+00:00:32.778 --> 00:00:35.718
+from here on also called ICS event.
+
+10
+00:00:35.738 --> 00:00:39.798
+The 3D position of the first interaction in an ICS event,
+
+11
+00:00:39.818 --> 00:00:43.078
+comprising crystal ID and the depth of interaction,
+
+12
+00:00:43.098 --> 00:00:46.070
+are essential for PET scan reconstruction.
+
+13
+00:00:46.090 --> 00:00:50.410
+Hence, identifying both accurately is the goal of this work.
+
+14
+00:00:50.458 --> 00:00:54.598
+In a photoelectric event, as there is only one interaction site,
+
+15
+00:00:54.618 --> 00:00:58.662
+it's relatively easy to identify the first interaction crystal.
+
+16
+00:00:58.682 --> 00:01:04.422
+On the right, the observed SiPM pattern is our source or input to the framework.
+
+17
+00:01:04.442 --> 00:01:08.582
+However, first interaction crystal identification is challenging
+
+18
+00:01:08.602 --> 00:01:13.446
+in an ICS SiPM pattern due to multiple interaction sites.
+
+19
+00:01:13.466 --> 00:01:16.086
+We found in our <b>Prism-PET 1</b> experiments
+
+20
+00:01:16.106 --> 00:01:21.286
+that about <b>70 to 80%</b> events are these challenging ICS events.
+
+21
+00:01:21.306 --> 00:01:27.386
+In the <b>511 keV</b> photon energy zone, where gamma radiation operates,
+
+22
+00:01:27.418 --> 00:01:32.422
+Compton scattering is often observed, giving rise to more ICS events.
+
+23
+00:01:32.442 --> 00:01:38.246
+Across crystals and depths, the photoelectric SiPM patterns vary significantly.
+
+24
+00:01:38.266 --> 00:01:42.726
+Hence, a similar variation is also expected in ICS events.
+
+25
+00:01:42.746 --> 00:01:46.406
+Using the center of gravity, or the CoG method,
+
+26
+00:01:46.426 --> 00:01:51.046
+it is easy to locate the first interaction crystal in a photoelectric event.
+
+27
+00:01:51.066 --> 00:01:57.226
+However, due to contamination, CoG fails significantly in an ICS event.
+
+28
+00:01:57.274 --> 00:02:00.294
+LOR, shorthand for line of response,
+
+29
+00:02:00.314 --> 00:02:04.678
+may also get affected due to mispositioning error in ICS events.
+
+30
+00:02:04.698 --> 00:02:10.182
+Mispositioning errors accumulate per event and compromise the scan resolution.
+
+31
+00:02:10.202 --> 00:02:14.822
+Our previous work, called <b>Recovery-Net</b>, uses a convolutional neural net
+
+32
+00:02:14.842 --> 00:02:21.702
+with two branches for crystal ID and DOI prediction, with the ICS SiPM pattern as input.
+
+33
+00:02:21.722 --> 00:02:26.934
+While it achieves decent performance, it only uses simulated data for training,
+
+34
+00:02:26.954 --> 00:02:30.534
+lacking experimental SiPM patterns from the scanner.
+
+35
+00:02:30.554 --> 00:02:34.246
+To further improve the first interaction position recovery,
+
+36
+00:02:34.266 --> 00:02:37.414
+what if we first recover the SiPM pattern?
+
+37
+00:02:37.434 --> 00:02:41.894
+By its nature, this task can be modeled as an image-to-image problem.
+
+38
+00:02:41.914 --> 00:02:46.054
+Such a problem is involved, as it is not easy to perform recovery
+
+39
+00:02:46.074 --> 00:02:51.942
+using conventional methods on an ICS pattern with overlapping interactions, as shown.
+
+40
+00:02:51.962 --> 00:02:57.766
+This plot shows that majority of the ICS events have such overlapping interactions.
+
+41
+00:02:57.786 --> 00:03:01.894
+Thus, we model the recovered distribution to be probabilistic,
+
+42
+00:03:01.914 --> 00:03:05.414
+and we use a conditional diffusion model for this task.
+
+43
+00:03:05.434 --> 00:03:11.974
+First interaction pattern and <b>10,240</b> total crystals are the two primary challenges
+
+44
+00:03:11.994 --> 00:03:14.054
+in this data acquisition process.
+
+45
+00:03:14.074 --> 00:03:18.022
+Since an ICS event consists of more than one interaction,
+
+46
+00:03:18.042 --> 00:03:23.046
+it can be viewed as multiple photoelectric patterns summed with energy weights.
+
+47
+00:03:23.066 --> 00:03:25.766
+For many crystals, a collimated source
+
+48
+00:03:25.786 --> 00:03:29.462
+would have to be passed through every crystal to get such data.
+
+49
+00:03:29.482 --> 00:03:31.942
+This is a time-consuming process.
+
+50
+00:03:31.962 --> 00:03:38.422
+Thanks to our previous work, we have a photoelectric patterns dataset per crystal per DOI
+
+51
+00:03:38.442 --> 00:03:40.518
+from a cylinder phantom experiment.
+
+52
+00:03:40.538 --> 00:03:44.998
+We perform GATE simulation that yields crystal ID and DOI
+
+53
+00:03:45.018 --> 00:03:47.718
+for every interaction of an ICS event.
+
+54
+00:03:47.738 --> 00:03:51.686
+Using these, we find an experimental photoelectric pattern,
+
+55
+00:03:51.706 --> 00:03:54.310
+which is weighted using the simulated energy.
+
+56
+00:03:54.330 --> 00:04:00.086
+A weighted sum of these patterns results in a synthetic ICS SiPM pattern,
+
+57
+00:04:00.106 --> 00:04:02.214
+which is the input to our framework.
+
+58
+00:04:02.234 --> 00:04:08.134
+And the first interaction pattern, crystal ID and DOI are our target variables.
+
+59
+00:04:08.154 --> 00:04:11.894
+We propose a novel framework called <b>D3Recovery</b>
+
+60
+00:04:11.914 --> 00:04:15.238
+that stands for diffusion-driven tripartite recovery.
+
+61
+00:04:15.258 --> 00:04:19.798
+Stage 1 is a conditional diffusion model that takes Gaussian noise,
+
+62
+00:04:19.818 --> 00:04:23.782
+the ICS SiPM pattern and block ID embeddings,
+
+63
+00:04:23.802 --> 00:04:26.630
+which encode the detector geometry, as input.
+
+64
+00:04:26.650 --> 00:04:30.310
+Forward diffusion is carried out by adding incremental noise
+
+65
+00:04:30.330 --> 00:04:35.302
+at each time step to the ground truth first interaction SiPM pattern.
+
+66
+00:04:35.322 --> 00:04:40.342
+Then, the reverse diffusion process takes place by denoising the Gaussian noise,
+
+67
+00:04:40.362 --> 00:04:42.822
+and a U-Net is used for this process.
+
+68
+00:04:42.842 --> 00:04:46.246
+These are some results from this Stage 1 diffusion model.
+
+69
+00:04:46.266 --> 00:04:50.806
+We benchmarked the CoG method using the recovered predicted patterns,
+
+70
+00:04:50.826 --> 00:04:53.542
+showing significant improvement in CoG.
+
+71
+00:04:53.562 --> 00:04:57.478
+However, diffusion is an image-to-image framework.
+
+72
+00:04:57.498 --> 00:04:59.654
+Our goal is 3D position.
+
+73
+00:04:59.674 --> 00:05:03.462
+Additionally, what if pattern recovery is incorrect?
+
+74
+00:05:03.482 --> 00:05:08.182
+Stage 1 also lacks the ICS and first interaction correlation,
+
+75
+00:05:08.202 --> 00:05:10.838
+as this may result in further improvement.
+
+76
+00:05:10.858 --> 00:05:14.918
+Hence, we propose Stage 2 for accurate position recovery.
+
+77
+00:05:14.938 --> 00:05:21.862
+Using the recovered and ICS SiPM patterns, along with the block ID embeddings, as input,
+
+78
+00:05:21.882 --> 00:05:25.558
+we develop a physics-informed <b>CrystalAttentionNet</b>,
+
+79
+00:05:25.578 --> 00:05:31.782
+comprising cross-attention and 16 × 16 spatial probability heat map prediction head,
+
+80
+00:05:31.802 --> 00:05:37.126
+as opposed to a classification head in <b>Recovery-Net</b> for crystal ID prediction.
+
+81
+00:05:37.146 --> 00:05:41.494
+We also have a guided depth model for DOI recovery,
+
+82
+00:05:41.514 --> 00:05:45.446
+which uses crystal ID as a regularizer during training.
+
+83
+00:05:45.466 --> 00:05:50.278
+These are event-level results with Stage 1 and Stage 2 predictions.
+
+84
+00:05:50.298 --> 00:05:52.038
+In the highlighted case,
+
+85
+00:05:52.058 --> 00:05:57.078
+we see that Stage 2 is accurate even when Stage 1 prediction is incorrect,
+
+86
+00:05:57.098 --> 00:06:00.038
+due to including both patterns in the input.
+
+87
+00:06:00.058 --> 00:06:02.758
+We also show some rare failure cases,
+
+88
+00:06:02.778 --> 00:06:07.910
+where Stage 1 is correct but Stage 2 is wrong, or both stages are wrong.
+
+89
+00:06:07.930 --> 00:06:13.110
+At the event level, we evaluate <b>D3Recovery</b> with center of gravity,
+
+90
+00:06:13.130 --> 00:06:16.870
+<b>Recovery-Net</b>, center of gravity with Stage 1 baselines
+
+91
+00:06:16.890 --> 00:06:21.958
+for crystal ID and DOI error width at full width half maximum.
+
+92
+00:06:21.978 --> 00:06:25.382
+Crystal prediction distance is also another metric.
+
+93
+00:06:25.402 --> 00:06:28.934
+In all the above, our framework performs the best.
+
+94
+00:06:28.954 --> 00:06:33.094
+At the scan level, we can validate the improvement visually,
+
+95
+00:06:33.114 --> 00:06:38.630
+particularly in the shown region, from a 3D ultra-Derenzo phantom experiment.
+
+96
+00:06:38.650 --> 00:06:41.222
+A baseline comparison is presented.
+
+97
+00:06:41.242 --> 00:06:46.742
+Quantitatively, we observe a <b>24%</b> peak-to-valley ratio improvement
+
+98
+00:06:46.762 --> 00:06:50.118
+using <b>D3Recovery</b> for this phantom experiment.
+
+99
+00:06:50.138 --> 00:06:53.558
+In this 3D Hoffman brain phantom experiment,
+
+100
+00:06:53.578 --> 00:06:57.798
+we observe significant improvements in the certain regions as shown.
+
+101
+00:06:57.818 --> 00:07:00.838
+We document the structural similarity index,
+
+102
+00:07:00.858 --> 00:07:05.094
+mean absolute error and standard deviation for all the methods.
+
+103
+00:07:05.114 --> 00:07:10.646
+In conclusion, we propose a practical experiment dataset generation method,
+
+104
+00:07:10.666 --> 00:07:16.166
+a novel physics-informed <b>D3Recovery</b> framework that achieves superior performance
+
+105
+00:07:16.186 --> 00:07:21.830
+in ICS recovery as compared to the analytical and CNN baseline methods.
+
+106
+00:07:21.850 --> 00:07:27.910
+Our future work, called <b>D3RecoveryMux</b>, will focus on interleaved multiplexing
+
+107
+00:07:27.930 --> 00:07:32.870
+using flow-matching diffusion model to further improve ICS recovery.
+
+108
+00:07:32.890 --> 00:07:36.660
+Thanks to our principal investigator, Dr. Amir Goldan,
+
+109
+00:07:36.680 --> 00:07:39.960
+Dr. Wanbin Tan, and all my team members.
+
+110
+00:07:39.980 --> 00:07:41.740
+Thank you for watching.
+
