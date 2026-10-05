@@ -321,7 +321,7 @@ a.author__link:focus-visible .author__photo { box-shadow: 0 0 0 3px #fff, 0 0 0 
   font-size: .76rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--accent);
 }
 
-/* ------------------------------------------------- one-minute overview video */
+/* ------------------------------------------------------ short overview video */
 /* Sits under the TL;DR at the same width, so the two read as one block */
 .teaser { max-width: 860px; margin: 1.5rem auto 0; }
 .teaser__frame {
